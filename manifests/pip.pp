@@ -189,27 +189,42 @@ define python::pip (
 
   # Explicit version out of VCS when PIP supported URL is provided
   if $source =~ /^(git\+|hg\+|bzr\+|svn\+)(http|https|ssh|svn|sftp|ftp|lp)(:\/\/).+$/ {
-    if $ensure != present and $ensure != latest {
-      exec { "pip_install_${name}":
-        command     => "${pip_env} wheel --help > /dev/null 2>&1 && { ${pip_env} wheel --version > /dev/null 2>&1 || wheel_support_flag='--no-use-wheel'; } ; { ${pip_env} --log ${log}/pip.log install ${install_args} \$wheel_support_flag ${pypi_index} ${proxy_flag} ${install_args} ${install_editable} ${source}@${ensure}#egg=${egg_name} || ${pip_env} --log ${log}/pip.log install ${install_args} ${pypi_index} ${proxy_flag} ${install_args} ${install_editable} ${source}@${ensure}#egg=${egg_name} ;}",
-        unless      => "${pip_env} freeze | grep -i -e ${grep_regex}",
-        user        => $owner,
-        group       => $group,
-        cwd         => $cwd,
-        environment => $environment,
-        timeout     => $timeout,
-        path        => $path,
+    case $ensure {
+      latest: {
+        # make sure install gets run on each puppet run when installing from a repo.
+        exec { "pip_install_${name}":
+          command     => "${pip_env} wheel --help > /dev/null 2>&1 && { ${pip_env} wheel --version > /dev/null 2>&1 || wheel_support_flag='--no-use-wheel'; } ; { ${pip_env} --log ${log}/pip.log install --upgrade ${install_args} \$wheel_support_flag ${pypi_index} ${proxy_flag} ${install_args} ${install_editable} ${source} || ${pip_env} --log ${log}/pip.log install ${install_args} ${pypi_index} ${proxy_flag} ${install_args} ${install_editable} ${source} ;}",
+          user        => $owner,
+          group       => $group,
+          cwd         => $cwd,
+          environment => $environment,
+          timeout     => $timeout,
+          path        => $path,
+        }
       }
-    } else {
-      exec { "pip_install_${name}":
-        command     => "${pip_env} wheel --help > /dev/null 2>&1 && { ${pip_env} wheel --version > /dev/null 2>&1 || wheel_support_flag='--no-use-wheel'; } ; { ${pip_env} --log ${log}/pip.log install ${install_args} \$wheel_support_flag ${pypi_index} ${proxy_flag} ${install_args} ${install_editable} ${source} || ${pip_env} --log ${log}/pip.log install ${install_args} ${pypi_index} ${proxy_flag} ${install_args} ${install_editable} ${source} ;}",
-        unless      => "${pip_env} freeze | grep -i -e ${grep_regex}",
-        user        => $owner,
-        group       => $group,
-        cwd         => $cwd,
-        environment => $environment,
-        timeout     => $timeout,
-        path        => $path,
+      present: {
+        exec { "pip_install_${name}":
+          command     => "${pip_env} wheel --help > /dev/null 2>&1 && { ${pip_env} wheel --version > /dev/null 2>&1 || wheel_support_flag='--no-use-wheel'; } ; { ${pip_env} --log ${log}/pip.log install ${install_args} \$wheel_support_flag ${pypi_index} ${proxy_flag} ${install_args} ${install_editable} ${source} || ${pip_env} --log ${log}/pip.log install ${install_args} ${pypi_index} ${proxy_flag} ${install_args} ${install_editable} ${source} ;}",
+          unless      => "${pip_env} freeze | grep -i -e ${grep_regex}",
+          user        => $owner,
+          group       => $group,
+          cwd         => $cwd,
+          environment => $environment,
+          timeout     => $timeout,
+          path        => $path,
+        }
+      }
+      default: {
+        exec { "pip_install_${name}":
+          command     => "${pip_env} wheel --help > /dev/null 2>&1 && { ${pip_env} wheel --version > /dev/null 2>&1 || wheel_support_flag='--no-use-wheel'; } ; { ${pip_env} --log ${log}/pip.log install ${install_args} \$wheel_support_flag ${pypi_index} ${proxy_flag} ${install_args} ${install_editable} ${source}@${ensure}#egg=${egg_name} || ${pip_env} --log ${log}/pip.log install ${install_args} ${pypi_index} ${proxy_flag} ${install_args} ${install_editable} ${source}@${ensure}#egg=${egg_name} ;}",
+          unless      => "${pip_env} freeze | grep -i -e ${grep_regex}",
+          user        => $owner,
+          group       => $group,
+          cwd         => $cwd,
+          environment => $environment,
+          timeout     => $timeout,
+          path        => $path,
+        }
       }
     }
   } else {
@@ -228,7 +243,7 @@ define python::pip (
           path        => $path,
         }
       }
-# 
+
       present: {
         # Whatever version is available.
         exec { "pip_install_${name}":
