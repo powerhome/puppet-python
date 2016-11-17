@@ -189,7 +189,6 @@ define python::pip (
 
   # Explicit version out of VCS when PIP supported URL is provided
   if $source =~ /^(git\+|hg\+|bzr\+|svn\+)(http|https|ssh|svn|sftp|ftp|lp)(:\/\/).+$/ {
-    notify { "Install from version out of VCS: source=${source}, ensure=${ensure}, grep_regex=${grep_regex}": }
     case $ensure {
       /^((19|20)[0-9][0-9]-(0[1-9]|1[1-2])-([0-2][1-9]|3[0-1])|[0-9]+\.\w+\+?\w*(\.\w+)*)$/: {
         # Version formats as per http://guide.python-distribute.org/specification.html#standard-versioning-schemes
@@ -243,7 +242,6 @@ define python::pip (
       }
     }
   } else {
-    notify { "Installing Python package: ensure=${ensure}, name=${name}, grep_regex=${grep_regex}, pip_env=${pip_env}": }
     case $ensure {
       /^((19|20)[0-9][0-9]-(0[1-9]|1[1-2])-([0-2][1-9]|3[0-1])|[0-9]+\.\w+\+?\w*(\.\w+)*)$/: {
         # Version formats as per http://guide.python-distribute.org/specification.html#standard-versioning-schemes
