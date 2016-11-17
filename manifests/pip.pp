@@ -191,6 +191,20 @@ define python::pip (
   if $source =~ /^(git\+|hg\+|bzr\+|svn\+)(http|https|ssh|svn|sftp|ftp|lp)(:\/\/).+$/ {
     notify { "Install from version out of VCS: source=${source}, ensure=${ensure}": }
     case $ensure {
+      /^((19|20)[0-9][0-9]-(0[1-9]|1[1-2])-([0-2][1-9]|3[0-1])|[0-9]+\.\w+\+?\w*(\.\w+)*)$/: {
+        # Version formats as per http://guide.python-distribute.org/specification.html#standard-versioning-schemes
+        # Explicit version.
+        exec { "pip_install_${name}":
+          command     => "${pip_env} wheel --help > /dev/null 2>&1 && { ${pip_env} wheel --version > /dev/null 2>&1 || wheel_support_flag='--no-use-wheel'; } ; { ${pip_env} --log ${log}/pip.log install ${install_args} \$wheel_support_flag ${pypi_index} ${proxy_flag} ${install_args} ${install_editable} ${source}==${ensure} || ${pip_env} --log ${log}/pip.log install ${install_args} ${pypi_index} ${proxy_flag} ${install_args} ${install_editable} ${source}@${ensure} ;}",
+          unless      => "${pip_env} freeze | grep -i -e ${grep_regex} || ${pip_env} list | sed -e 's/[ ]\\+/==/' -e 's/[()]//g' | grep -i -e ${grep_regex}",
+          user        => $owner,
+          group       => $group,
+          cwd         => $cwd,
+          environment => $environment,
+          timeout     => $timeout,
+          path        => $path,
+        }
+      }
       latest: {
         # make sure install gets run on each puppet run when installing from a repo.
         exec { "pip_install_${name}":
