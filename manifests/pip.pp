@@ -189,7 +189,7 @@ define python::pip (
 
   # Explicit version out of VCS when PIP supported URL is provided
   if $source =~ /^(git\+|hg\+|bzr\+|svn\+)(http|https|ssh|svn|sftp|ftp|lp)(:\/\/).+$/ {
-    notify { "Install from version out of VCS": }
+    notify { "Install from version out of VCS: source=${source}, ensure=${ensure}": }
     case $ensure {
       latest: {
         # make sure install gets run on each puppet run when installing from a repo.
